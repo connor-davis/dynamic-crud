@@ -14,6 +14,8 @@ import (
 )
 
 type CrudApi[T any] interface {
+	AssignCreateSchema(schema *openapi3.Schema) CrudApi[T]
+	AssignUpdateSchema(schema *openapi3.Schema) CrudApi[T]
 	CreateRoute() routing.Route
 	UpdateRoute() routing.Route
 	DeleteRoute() routing.Route
@@ -25,6 +27,8 @@ type crudApi[T any] struct {
 	storage storage.Storage
 	name    string
 	crud    Crud[T]
+	create  *openapi3.Schema
+	update  *openapi3.Schema
 }
 
 type UpdateParams struct {
@@ -52,6 +56,18 @@ func NewCrudApi[T any](storage storage.Storage) CrudApi[T] {
 		name:    tReflectionName,
 		crud:    crud,
 	}
+}
+
+func (c *crudApi[T]) AssignCreateSchema(schema *openapi3.Schema) CrudApi[T] {
+	c.create = schema
+
+	return c
+}
+
+func (c *crudApi[T]) AssignUpdateSchema(schema *openapi3.Schema) CrudApi[T] {
+	c.update = schema
+
+	return c
 }
 
 func (c *crudApi[T]) CreateRoute() routing.Route {
@@ -115,14 +131,17 @@ func (c *crudApi[T]) CreateRoute() routing.Route {
 			RequestBody: &openapi3.RequestBodyRef{
 				Value: openapi3.NewRequestBody().
 					WithRequired(true).
-					WithJSONSchemaRef(openapi3.NewSchemaRef("#/components/schemas/"+c.name, nil)).
+					WithJSONSchemaRef(c.create.NewRef()).
 					WithDescription(fmt.Sprintf("Payload to create a new %s.", strings.ToLower(c.name))),
 			},
 			Responses: responses,
 		},
-		Method:      routing.POST,
-		Path:        fmt.Sprintf("/%ss", strings.ToLower(c.name)),
-		Middlewares: []fiber.Handler{},
+		Entity:       c.name,
+		CreateSchema: c.create,
+		UpdateSchema: nil,
+		Method:       routing.POST,
+		Path:         fmt.Sprintf("/%ss", strings.ToLower(c.name)),
+		Middlewares:  []fiber.Handler{},
 		Handler: func(ctx *fiber.Ctx) error {
 			var entity T
 
@@ -222,14 +241,17 @@ func (c *crudApi[T]) UpdateRoute() routing.Route {
 			RequestBody: &openapi3.RequestBodyRef{
 				Value: openapi3.NewRequestBody().
 					WithRequired(true).
-					WithJSONSchemaRef(openapi3.NewSchemaRef("#/components/schemas/"+c.name, nil)).
+					WithJSONSchemaRef(c.update.NewRef()).
 					WithDescription(fmt.Sprintf("Payload to update an existing %s.", strings.ToLower(c.name))),
 			},
 			Responses: responses,
 		},
-		Method:      routing.PUT,
-		Path:        fmt.Sprintf("/%ss/:id", strings.ToLower(c.name)),
-		Middlewares: []fiber.Handler{},
+		Entity:       c.name,
+		CreateSchema: nil,
+		UpdateSchema: c.update,
+		Method:       routing.PUT,
+		Path:         fmt.Sprintf("/%ss/:id", strings.ToLower(c.name)),
+		Middlewares:  []fiber.Handler{},
 		Handler: func(ctx *fiber.Ctx) error {
 			var params UpdateParams
 
@@ -338,9 +360,12 @@ func (c *crudApi[T]) DeleteRoute() routing.Route {
 			RequestBody: nil,
 			Responses:   responses,
 		},
-		Method:      routing.DELETE,
-		Path:        fmt.Sprintf("/%ss/:id", strings.ToLower(c.name)),
-		Middlewares: []fiber.Handler{},
+		Entity:       c.name,
+		CreateSchema: nil,
+		UpdateSchema: nil,
+		Method:       routing.DELETE,
+		Path:         fmt.Sprintf("/%ss/:id", strings.ToLower(c.name)),
+		Middlewares:  []fiber.Handler{},
 		Handler: func(ctx *fiber.Ctx) error {
 			var params DeleteParams
 
@@ -440,9 +465,12 @@ func (c *crudApi[T]) GetOneRoute() routing.Route {
 			RequestBody: nil,
 			Responses:   responses,
 		},
-		Method:      routing.GET,
-		Path:        fmt.Sprintf("/%ss/:id", strings.ToLower(c.name)),
-		Middlewares: []fiber.Handler{},
+		Entity:       c.name,
+		CreateSchema: nil,
+		UpdateSchema: nil,
+		Method:       routing.GET,
+		Path:         fmt.Sprintf("/%ss/:id", strings.ToLower(c.name)),
+		Middlewares:  []fiber.Handler{},
 		Handler: func(ctx *fiber.Ctx) error {
 			var params GetOneParams
 
@@ -530,9 +558,12 @@ func (c *crudApi[T]) GetAllRoute() routing.Route {
 			RequestBody: nil,
 			Responses:   responses,
 		},
-		Method:      routing.GET,
-		Path:        fmt.Sprintf("/%ss", strings.ToLower(c.name)),
-		Middlewares: []fiber.Handler{},
+		Entity:       c.name,
+		CreateSchema: nil,
+		UpdateSchema: nil,
+		Method:       routing.GET,
+		Path:         fmt.Sprintf("/%ss", strings.ToLower(c.name)),
+		Middlewares:  []fiber.Handler{},
 		Handler: func(ctx *fiber.Ctx) error {
 			var entities []T
 

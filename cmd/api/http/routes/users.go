@@ -4,6 +4,7 @@ import (
 	"github.com/connor-davis/dynamic-crud/internal/crud"
 	"github.com/connor-davis/dynamic-crud/internal/models"
 	"github.com/connor-davis/dynamic-crud/internal/routing"
+	"github.com/connor-davis/dynamic-crud/internal/routing/schemas"
 	"github.com/connor-davis/dynamic-crud/internal/storage"
 )
 
@@ -18,7 +19,9 @@ func NewUsersRouter(storage storage.Storage) Router {
 }
 
 func (r *UsersRouter) LoadRoutes() []routing.Route {
-	crudApi := crud.NewCrudApi[models.User](r.storage)
+	crudApi := crud.NewCrudApi[models.User](r.storage).
+		AssignCreateSchema(schemas.UserSchema).
+		AssignUpdateSchema(schemas.UserSchema)
 
 	getAllRoute := crudApi.GetAllRoute()
 	getOneRoute := crudApi.GetOneRoute()

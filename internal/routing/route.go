@@ -27,6 +27,11 @@ const (
 type Route struct {
 	OpenAPIMetadata
 
+	Entity string
+
+	CreateSchema *openapi3.Schema
+	UpdateSchema *openapi3.Schema
+
 	Method      RouteMethod
 	Path        string
 	Middlewares []fiber.Handler

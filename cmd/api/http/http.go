@@ -57,6 +57,12 @@ func (h *httpRouter) InitializeRoutes(router fiber.Router) {
 func (h *httpRouter) InitializeOpenAPI() *openapi3.T {
 	paths := openapi3.NewPaths()
 
+	schemas := openapi3.Schemas{
+		"SuccessResponse": schemas.SuccessSchema.NewRef(),
+		"ErrorResponse":   schemas.ErrorSchema.NewRef(),
+		"User":            schemas.UserSchema.NewRef(),
+	}
+
 	for _, route := range h.routes {
 		pathItem := &openapi3.PathItem{}
 
@@ -70,6 +76,12 @@ func (h *httpRouter) InitializeOpenAPI() *openapi3.T {
 				Responses:   route.Responses,
 			}
 		case routing.POST:
+			if route.CreateSchema == nil {
+				continue
+			}
+
+			schemas[fmt.Sprintf("Create%s", route.Entity)] = route.CreateSchema.NewRef()
+
 			pathItem.Post = &openapi3.Operation{
 				Summary:     route.Summary,
 				Description: route.Description,
@@ -79,6 +91,12 @@ func (h *httpRouter) InitializeOpenAPI() *openapi3.T {
 				Responses:   route.Responses,
 			}
 		case routing.PUT:
+			if route.UpdateSchema == nil {
+				continue
+			}
+
+			schemas[fmt.Sprintf("Update%s", route.Entity)] = route.UpdateSchema.NewRef()
+
 			pathItem.Put = &openapi3.Operation{
 				Summary:     route.Summary,
 				Description: route.Description,
@@ -136,11 +154,7 @@ func (h *httpRouter) InitializeOpenAPI() *openapi3.T {
 		Tags:  openapi3.Tags{},
 		Paths: paths,
 		Components: &openapi3.Components{
-			Schemas: openapi3.Schemas{
-				"SuccessResponse": schemas.SuccessSchema.NewRef(),
-				"ErrorResponse":   schemas.ErrorSchema.NewRef(),
-				"User":            schemas.UserSchema.NewRef(),
-			},
+			Schemas: schemas,
 		},
 	}
 }
