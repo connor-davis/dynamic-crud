@@ -20,8 +20,8 @@ func NewUsersRouter(storage storage.Storage) Router {
 
 func (r *UsersRouter) LoadRoutes() []routing.Route {
 	crudApi := crud.NewCrudApi[models.User](r.storage).
-		AssignCreateSchema(schemas.UserSchema).
-		AssignUpdateSchema(schemas.UserSchema)
+		AssignCreateSchema(schemas.CreateUserSchema).
+		AssignUpdateSchema(schemas.UpdateUserSchema)
 
 	getAllRoute := crudApi.GetAllRoute()
 	getOneRoute := crudApi.GetOneRoute()

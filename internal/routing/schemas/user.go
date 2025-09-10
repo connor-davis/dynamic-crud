@@ -17,3 +17,23 @@ var UserSchema = openapi3.NewSchema().
 		"createdAt",
 		"updatedAt",
 	})
+
+var CreateUserSchema = openapi3.NewSchema().
+	WithProperties(map[string]*openapi3.Schema{
+		"name":  openapi3.NewStringSchema().WithFormat("text").WithMin(3),
+		"email": openapi3.NewStringSchema().WithFormat("email").WithPattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"),
+	}).
+	WithRequired([]string{
+		"name",
+		"email",
+	})
+
+var UpdateUserSchema = openapi3.NewSchema().
+	WithProperties(map[string]*openapi3.Schema{
+		"name":  openapi3.NewStringSchema().WithFormat("text").WithMin(3),
+		"email": openapi3.NewStringSchema().WithFormat("email").WithPattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"),
+	}).
+	WithRequired([]string{
+		"name",
+		"email",
+	})
