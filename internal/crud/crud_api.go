@@ -11,6 +11,7 @@ import (
 	"github.com/connor-davis/dynamic-crud/internal/storage"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type CrudApi[T any] interface {
@@ -272,6 +273,13 @@ func (c *crudApi[T]) UpdateRoute() routing.Route {
 			}
 
 			if err := c.crud.Update(params.Id, &entity); err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+						"error":   "Not Found",
+						"message": fmt.Sprintf("The %s was not found.", strings.ToLower(c.name)),
+					})
+				}
+
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"error":   "Internal Server Error",
 					"message": err.Error(),
@@ -377,6 +385,13 @@ func (c *crudApi[T]) DeleteRoute() routing.Route {
 			}
 
 			if err := c.crud.Delete(params.Id, new(T)); err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+						"error":   "Not Found",
+						"message": fmt.Sprintf("The %s was not found.", strings.ToLower(c.name)),
+					})
+				}
+
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"error":   "Internal Server Error",
 					"message": err.Error(),
@@ -484,6 +499,13 @@ func (c *crudApi[T]) GetOneRoute() routing.Route {
 			var entity T
 
 			if err := c.crud.FindOne(params.Id, &entity); err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+						"error":   "Not Found",
+						"message": fmt.Sprintf("The %s was not found.", strings.ToLower(c.name)),
+					})
+				}
+
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"error":   "Internal Server Error",
 					"message": err.Error(),
